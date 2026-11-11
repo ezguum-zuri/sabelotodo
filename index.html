@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Sabelotodo">
+<meta name="theme-color" content="#14204a">
+<title>Sabelotodo — Trivial cultural</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14204a;--bg2:#0d1636;--card:#fffaf0;--ink:#1d2340;--muted:#6b7090;--line:#e6dcc6;
+  --geo:#2f7de1;--ent:#e2468e;--his:#e9b51f;--art:#9a6a3a;--cie:#3bb54a;--dep:#f28a1a;--ok:#2fb35a;--bad:#e2443b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0%,#24357a 0%,var(--bg) 45%,var(--bg2) 100%) fixed;color:#fff;font-family:Nunito,system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer;border:0}
+.hidden{display:none!important}
+#app{max-width:480px;margin:0 auto;padding:14px 14px 28px;min-height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-family:Fredoka,sans-serif;font-weight:700;font-size:26px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.logo svg{width:30px;height:30px}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:17px;font-weight:800}
+.iconbtn:active{background:rgba(255,255,255,.22)}
+.panel{background:var(--card);color:var(--ink);border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+h2{font-family:Fredoka,sans-serif;font-weight:600;margin:0 0 6px;font-size:22px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px;line-height:1.4}
+.label{font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:16px 0 8px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:12px 0;border-radius:12px;background:#f1e8d4;color:var(--ink);font-weight:800;font-size:17px}
+.seg button.on{background:var(--ink);color:#fff}
+.names{display:flex;flex-direction:column;gap:8px}
+.names div{display:flex;align-items:center;gap:10px}
+.names .dot{width:14px;height:14px;border-radius:50%;flex:none}
+.names input{flex:1;padding:12px 14px;border-radius:12px;border:2px solid var(--line);font:inherit;font-weight:700;color:var(--ink);background:#fff;min-width:0}
+.names input:focus{outline:none;border-color:var(--geo)}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:#f6efdf;font-weight:700}
+.switch{width:50px;height:30px;border-radius:15px;background:#cfc5ad;position:relative;transition:.2s;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on{background:var(--ok)}.switch.on::after{left:23px}
+.big{width:100%;margin-top:20px;padding:16px;border-radius:16px;background:linear-gradient(180deg,#ff9b3d,#ef6a12);color:#fff;font-family:Fredoka,sans-serif;font-weight:600;font-size:21px;box-shadow:0 5px 0 #b44c05}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 #b44c05}
+.rules{margin:14px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.5}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:4px}
+.cats span{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700}
+.cats i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* juego */
+#players{display:grid;gap:8px;margin-bottom:12px}
+.pl{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:2px solid transparent;transition:.25s}
+.pl.cur{background:rgba(255,255,255,.16);border-color:#ffd54a;transform:scale(1.02)}
+.pl svg{width:40px;height:40px;flex:none}
+.pl .nm{font-weight:800;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl .st{font-size:12px;opacity:.75;font-weight:700}
+.turn{text-align:center;font-family:Fredoka,sans-serif;font-size:22px;font-weight:600;margin:4px 0 2px}
+.turnsub{text-align:center;font-size:14px;opacity:.75;margin-bottom:6px;min-height:19px}
+.wheelWrap{position:relative;width:min(88vw,360px);aspect-ratio:1;margin:8px auto 0}
+#wheel{width:100%;height:100%;transition:transform 3.4s cubic-bezier(.15,.7,.2,1);filter:drop-shadow(0 10px 18px rgba(0,0,0,.45))}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:28px solid #ffd54a;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+#spin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:27%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ece3cf);color:var(--ink);font-family:Fredoka,sans-serif;font-weight:700;font-size:clamp(14px,4.4vw,19px);box-shadow:0 4px 0 #b9ab8b,0 0 0 5px #14204a;z-index:3}
+#spin:active{transform:translate(-50%,-48%);box-shadow:0 2px 0 #b9ab8b,0 0 0 5px #14204a}
+#spin:disabled{opacity:.6}
+.hint{text-align:center;font-size:12.5px;opacity:.6;margin-top:16px}
+.foot{display:flex;justify-content:center;margin-top:14px}
+.ghost{background:transparent;color:#fff;opacity:.7;font-weight:800;font-size:14px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.25)}
+
+/* pregunta */
+.modal{position:fixed;inset:0;background:rgba(5,9,25,.72);display:flex;align-items:center;justify-content:center;padding:14px;z-index:20;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.qcard{width:100%;max-width:460px;background:var(--card);color:var(--ink);border-radius:22px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:pop .3s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.qhead{padding:14px 18px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.qhead .cn{font-family:Fredoka,sans-serif;font-weight:600;font-size:20px;display:flex;align-items:center;gap:8px}
+.qhead .tag{font-size:12px;font-weight:800;background:rgba(0,0,0,.22);padding:5px 9px;border-radius:20px;white-space:nowrap}
+.timer{height:6px;background:#efe5cf}.timer div{height:100%;background:var(--ink);width:100%}
+.qbody{padding:18px}
+.qwho{font-size:13px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.qtext{font-family:Fredoka,sans-serif;font-weight:500;font-size:21px;line-height:1.3;margin-bottom:16px}
+.opts{display:grid;gap:9px}
+.opt{text-align:left;padding:13px 14px;border-radius:13px;background:#fff;border:2px solid var(--line);color:var(--ink);font-size:16px;font-weight:700;display:flex;gap:10px;align-items:center;transition:.15s}
+.opt b{width:26px;height:26px;border-radius:8px;background:#f1e8d4;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+.opt:not(:disabled):active{transform:scale(.98)}
+.opt.ok{background:#e3f7e9;border-color:var(--ok)}.opt.ok b{background:var(--ok);color:#fff}
+.opt.bad{background:#fde6e4;border-color:var(--bad)}.opt.bad b{background:var(--bad);color:#fff}
+.opt:disabled{cursor:default}
+.res{margin-top:14px;padding:12px 14px;border-radius:13px;font-weight:800;display:flex;align-items:center;gap:10px}
+.res.ok{background:#e3f7e9;color:#1d7a3c}.res.bad{background:#fde6e4;color:#a8261f}
+.res svg{width:34px;height:34px;flex:none}
+.next{width:100%;margin-top:12px;padding:14px;border-radius:14px;background:var(--ink);color:#fff;font-family:Fredoka,sans-serif;font-weight:600;font-size:18px}
+
+/* victoria */
+.win{text-align:center}
+.win .trophy{font-size:64px;line-height:1}
+.win svg.pie{width:120px;height:120px;margin:10px auto;display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.stats div{background:#f6efdf;border-radius:12px;padding:10px 4px}
+.stats b{display:block;font-family:Fredoka,sans-serif;font-size:24px}
+.stats span{font-size:12px;color:var(--muted);font-weight:700}
+.confetti{position:fixed;top:-12px;width:9px;height:14px;z-index:30;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.toast{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:#fff;color:var(--ink);padding:14px 20px;border-radius:16px;font-family:Fredoka,sans-serif;font-size:20px;font-weight:600;z-index:40;box-shadow:0 12px 30px rgba(0,0,0,.4);display:flex;align-items:center;gap:10px;animation:pop .3s cubic-bezier(.2,1.4,.4,1);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo"><svg viewBox="-12 -12 24 24" id="logoPie"></svg>Sabelotodo</div>
+    <button class="iconbtn" id="mute" aria-label="Sonido">♪</button>
+  </header>
+
+  <!-- CONFIGURACIÓN -->
+  <section id="setup">
+    <div class="panel">
+      <h2>Nueva partida</h2>
+      <p class="sub">300 preguntas de cultura general. Consigue los 6 quesitos acertando una pregunta de cada categoría y luego acierta la pregunta final.</p>
+      <div class="label">Jugadores</div>
+      <div class="seg" id="nPl"><button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button></div>
+      <div class="label">Nombres</div>
+      <div class="names" id="names"></div>
+      <div class="label">Opciones</div>
+      <div class="toggle"><span>Tiempo límite (25 s)</span><button class="switch" id="tmr" aria-label="Tiempo límite"></button></div>
+      <button class="big" id="start">¡A jugar!</button>
+      <div class="label">Categorías</div>
+      <div class="cats" id="catList"></div>
+      <ul class="rules">
+        <li>Gira la ruleta y responde a la pregunta de esa categoría.</li>
+        <li>Si aciertas y aún no tienes ese quesito, lo ganas. Si aciertas, vuelves a tirar.</li>
+        <li>Si fallas, pasa el turno al siguiente jugador.</li>
+        <li>Con los 6 quesitos, te toca la pregunta final: si la aciertas, ¡ganas!</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PARTIDA -->
+  <section id="game" class="hidden">
+    <div id="players"></div>
+    <div class="turn" id="turn"></div>
+    <div class="turnsub" id="turnSub"></div>
+    <div class="wheelWrap">
+      <div class="pointer"></div>
+      <svg id="wheel" viewBox="-110 -110 220 220"></svg>
+      <button id="spin">GIRAR</button>
+    </div>
+    <div class="hint">Toca el centro de la ruleta para girar</div>
+    <div class="foot"><button class="ghost" id="quit">Terminar partida</button></div>
+  </section>
+
+  <!-- VICTORIA -->
+  <section id="winScreen" class="hidden">
+    <div class="panel win">
+      <div class="trophy">🏆</div>
+      <h2 id="winTitle"></h2>
+      <p class="sub" id="winSub"></p>
+      <svg class="pie" id="winPie" viewBox="-12 -12 24 24"></svg>
+      <div class="stats" id="winStats"></div>
+      <p class="sub" id="winRecord"></p>
+      <button class="big" id="again">Jugar otra vez</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal hidden" id="qModal">
+  <div class="qcard">
+    <div class="qhead" id="qHead"><div class="cn" id="qCat"></div><div class="tag" id="qTag"></div></div>
+    <div class="timer" id="timer"><div id="timerBar"></div></div>
+    <div class="qbody">
+      <div class="qwho" id="qWho"></div>
+      <div class="qtext" id="qText"></div>
+      <div class="opts" id="opts"></div>
+      <div id="res"></div>
+      <button class="next hidden" id="next">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+/* ================== CATEGORÍAS ================== */
+const CATS=[
+  {id:'geo',name:'Geografía',short:'Geografía',icon:'🌍',color:'#2f7de1'},
+  {id:'ent',name:'Entretenimiento',short:'Espectáculos',icon:'🎬',color:'#e2468e'},
+  {id:'his',name:'Historia',short:'Historia',icon:'🏛️',color:'#e9b51f'},
+  {id:'art',name:'Arte y Literatura',short:'Arte y Lit.',icon:'🎨',color:'#9a6a3a'},
+  {id:'cie',name:'Ciencia y Naturaleza',short:'Ciencia',icon:'🔬',color:'#3bb54a'},
+  {id:'dep',name:'Deportes y Ocio',short:'Deportes',icon:'⚽',color:'#f28a1a'}
+];
+/* ================== PREGUNTAS ==================
+   Formato: [pregunta, respuesta correcta, incorrecta, incorrecta, incorrecta] */
+const Q={
+geo:[
+["¿Qué río pasa por Sevilla?","Guadalquivir","Guadiana","Tajo","Júcar"],
+["¿Cuál es la capital de Australia?","Canberra","Sídney","Melbourne","Perth"],
+["¿Cuál es el país más grande del mundo por superficie?","Rusia","Canadá","China","Estados Unidos"],
+["¿Cuál es el océano más grande?","Pacífico","Atlántico","Índico","Ártico"],
+["¿Cuál es la montaña más alta del mundo?","Everest","K2","Kangchenjunga","Aconcagua"],
+["¿Cuál es el pico más alto de España?","Teide","Mulhacén","Aneto","Veleta"],
+["¿Cuál es el pico más alto de la península ibérica?","Mulhacén","Aneto","Teide","Almanzor"],
+["¿Cuál es la capital de Canadá?","Ottawa","Toronto","Montreal","Vancouver"],
+["¿En qué continente está Egipto?","África","Asia","Europa","Oceanía"],
+["¿Cuál es el desierto cálido más grande del mundo?","Sáhara","Gobi","Kalahari","Atacama"],
+["¿Qué río atraviesa Bilbao?","Nervión","Urumea","Bidasoa","Deba"],
+["¿Cuál es la capital de Navarra?","Pamplona","Tudela","Estella","Logroño"],
+["¿Cuántas provincias tiene España?","50","52","48","17"],
+["¿Cuál es la capital de Brasil?","Brasilia","Río de Janeiro","São Paulo","Salvador"],
+["¿Qué país tiene forma de bota?","Italia","Grecia","Portugal","Croacia"],
+["¿Cuál es el lago más grande de África?","Lago Victoria","Lago Tanganica","Lago Malaui","Lago Chad"],
+["¿Qué estrecho separa España de Marruecos?","Gibraltar","Bósforo","Magallanes","Ormuz"],
+["¿Cuál es la capital de Japón?","Tokio","Kioto","Osaka","Seúl"],
+["¿En qué país está la ciudad de Marrakech?","Marruecos","Argelia","Túnez","Egipto"],
+["¿Cuál es el país más poblado de Sudamérica?","Brasil","Argentina","Colombia","Perú"],
+["¿Qué cordillera separa España de Francia?","Pirineos","Alpes","Cordillera Cantábrica","Sistema Central"],
+["¿Cuál es la capital de Portugal?","Lisboa","Oporto","Coímbra","Braga"],
+["¿A qué país pertenece Groenlandia?","Dinamarca","Noruega","Islandia","Canadá"],
+["¿Cuál es la isla más grande de las Baleares?","Mallorca","Menorca","Ibiza","Formentera"],
+["¿Qué ciudad es conocida como «la Gran Manzana»?","Nueva York","Chicago","Los Ángeles","Boston"],
+["¿Cuál es el río más largo de Europa?","Volga","Danubio","Rin","Dniéper"],
+["¿En qué provincia está San Sebastián?","Gipuzkoa","Bizkaia","Álava","Navarra"],
+["¿Cuál es la capital de Egipto?","El Cairo","Alejandría","Luxor","Guiza"],
+["¿De qué país es capital Viena?","Austria","Suiza","Hungría","Alemania"],
+["¿Qué canal une el Atlántico y el Pacífico en Centroamérica?","Canal de Panamá","Canal de Suez","Canal de Kiel","Canal de Corinto"]
+],
+ent:[
+["¿Quién dirigió «Parque Jurásico»?","Steven Spielberg","George Lucas","James Cameron","Ridley Scott"],
+["¿Cómo se llama el colegio de magia de Harry Potter?","Hogwarts","Durmstrang","Beauxbatons","Ilvermorny"],
+["¿Qué grupo cantaba «Bohemian Rhapsody»?","Queen","The Beatles","Led Zeppelin","Pink Floyd"],
+["¿De qué país es «Parásitos», Óscar a mejor película en 2020?","Corea del Sur","Japón","China","Tailandia"],
+["¿Quién dirigió «Todo sobre mi madre»?","Pedro Almodóvar","Alejandro Amenábar","Fernando Trueba","Bigas Luna"],
+["¿Cómo se llama el famoso fontanero de los videojuegos de Nintendo?","Mario","Luigi","Wario","Link"],
+["¿Qué banda formaban John, Paul, George y Ringo?","The Beatles","The Rolling Stones","The Who","The Kinks"],
+["¿Qué actor interpretó a Jack en «Titanic»?","Leonardo DiCaprio","Brad Pitt","Matt Damon","Johnny Depp"],
+["¿En qué ciudad vive la familia Simpson?","Springfield","Shelbyville","Quahog","South Park"],
+["¿Qué cantante es conocido como el «Rey del Pop»?","Michael Jackson","Elvis Presley","Prince","Freddie Mercury"],
+["¿En qué saga aparece Luke Skywalker?","Star Wars","Star Trek","Dune","Battlestar Galactica"],
+["¿Quién dirigió «El laberinto del fauno»?","Guillermo del Toro","Alfonso Cuarón","Alejandro G. Iñárritu","Alejandro Amenábar"],
+["¿Qué película de Pixar trata de un robot que limpia la Tierra?","WALL·E","Toy Story","Up","Cars"],
+["¿Cuántas cuerdas tiene una guitarra española?","6","4","5","7"],
+["¿Qué serie transcurre en los Siete Reinos de Poniente?","Juego de Tronos","Los anillos de poder","The Witcher","Vikingos"],
+["¿En qué videojuego se apilan piezas formadas por cuatro bloques?","Tetris","Pac-Man","Arkanoid","Columns"],
+["¿Qué personaje de dibujos dice «¿Qué hay de nuevo, viejo?»","Bugs Bunny","El Pato Lucas","Mickey Mouse","El Pájaro Loco"],
+["¿Cómo se llama el premio principal del Festival de Cine de San Sebastián?","Concha de Oro","León de Oro","Palma de Oro","Oso de Oro"],
+["¿Cuál es el máximo premio del Festival de Cannes?","Palma de Oro","Concha de Oro","León de Oro","Oso de Oro"],
+["¿Qué cantante colombiana canta «Hips Don't Lie»?","Shakira","Karol G","Thalía","Sofía Vergara"],
+["¿Quién creó a Mickey Mouse?","Walt Disney","Matt Groening","Chuck Jones","Hanna-Barbera"],
+["¿Cómo se llama el hobbit que lleva el Anillo en «El Señor de los Anillos»?","Frodo","Bilbo","Sam","Pippin"],
+["¿Qué cantautor vasco popularizó «Txoria txori»?","Mikel Laboa","Benito Lertxundi","Ruper Ordorika","Fermin Muguruza"],
+["¿Qué serie española trata de un atraco a la Fábrica Nacional de Moneda y Timbre?","La casa de papel","Élite","Vis a vis","Las chicas del cable"],
+["¿Qué superhéroe es, en realidad, Bruce Wayne?","Batman","Superman","Spider-Man","Iron Man"],
+["¿Qué película de Studio Ghibli ganó el Óscar de animación en 2003?","El viaje de Chihiro","Mi vecino Totoro","La princesa Mononoke","El castillo ambulante"],
+["¿Quién compuso la música de «Star Wars»?","John Williams","Hans Zimmer","Ennio Morricone","Howard Shore"],
+["¿Qué cantante británica interpretó «Rolling in the Deep»?","Adele","Amy Winehouse","Dua Lipa","Duffy"],
+["¿En qué consola debutó Sonic en 1991?","Mega Drive","Super Nintendo","Game Boy","PlayStation"],
+["¿Qué detective belga creó Agatha Christie?","Hércules Poirot","Sherlock Holmes","Jules Maigret","Miss Marple"]
+],
+his:[
+["¿En qué año llegó Colón a América?","1492","1488","1500","1512"],
+["¿En qué año cayó el Muro de Berlín?","1989","1991","1985","1979"],
+["¿Quién fue el primer emperador romano?","Augusto","Julio César","Nerón","Trajano"],
+["¿En qué año comenzó la Primera Guerra Mundial?","1914","1918","1910","1939"],
+["¿En qué año terminó la Segunda Guerra Mundial?","1945","1944","1946","1939"],
+["¿Qué civilización construyó Machu Picchu?","Inca","Azteca","Maya","Olmeca"],
+["¿Quién fue el primer hombre en pisar la Luna?","Neil Armstrong","Buzz Aldrin","Yuri Gagarin","Michael Collins"],
+["¿En qué año pisó el ser humano la Luna por primera vez?","1969","1965","1972","1961"],
+["¿En qué año se aprobó la actual Constitución española?","1978","1975","1982","1977"],
+["¿Quiénes fueron los Reyes Católicos?","Isabel I y Fernando II","Carlos I e Isabel de Portugal","Felipe II y María Tudor","Juana I y Felipe el Hermoso"],
+["¿En qué año comenzó la Revolución francesa?","1789","1799","1776","1815"],
+["¿Quién fue el primer presidente de Estados Unidos?","George Washington","Abraham Lincoln","Thomas Jefferson","John Adams"],
+["¿En qué ciudad fue asesinado John F. Kennedy?","Dallas","Washington","Nueva York","Chicago"],
+["¿Qué marino de Getaria completó la primera vuelta al mundo?","Juan Sebastián Elcano","Blas de Lezo","Miguel López de Legazpi","Andrés de Urdaneta"],
+["¿En qué año fue bombardeada Gernika?","1937","1936","1939","1934"],
+["¿Qué faraón tenía la tumba hallada casi intacta en 1922?","Tutankamón","Ramsés II","Keops","Akenatón"],
+["¿Quién dirigía la Unión Soviética durante la Segunda Guerra Mundial?","Stalin","Lenin","Jruschov","Trotski"],
+["¿Qué imperio tuvo Constantinopla como capital hasta 1453?","Bizantino","Otomano","Romano de Occidente","Persa"],
+["¿En qué batalla fue derrotado definitivamente Napoleón?","Waterloo","Austerlitz","Trafalgar","Bailén"],
+["¿Qué navegante portugués llegó a la India por mar en 1498?","Vasco da Gama","Fernando de Magallanes","Bartolomeu Dias","Pedro Álvares Cabral"],
+["¿En qué año fue el atentado contra las Torres Gemelas?","2001","1999","2003","2000"],
+["¿Quién escribió el «Manifiesto comunista» junto a Karl Marx?","Friedrich Engels","Lenin","Mijaíl Bakunin","Pierre-Joseph Proudhon"],
+["¿Qué rey de España abdicó en 2014?","Juan Carlos I","Felipe VI","Alfonso XIII","Felipe V"],
+["¿En qué año empezaron a circular los billetes y monedas de euro?","2002","1999","2000","2004"],
+["¿Qué pueblo inventó la escritura cuneiforme?","Los sumerios","Los egipcios","Los fenicios","Los griegos"],
+["¿Qué ciudad sepultó el Vesubio en el año 79?","Pompeya","Roma","Cartago","Atenas"],
+["¿De qué país fue reina Cleopatra?","Egipto","Persia","Grecia","Fenicia"],
+["¿En qué año terminó la Guerra Civil española?","1939","1936","1940","1945"],
+["¿Qué país regaló la Estatua de la Libertad a Estados Unidos?","Francia","Reino Unido","España","Italia"],
+["¿De qué país fue presidente Nelson Mandela?","Sudáfrica","Kenia","Nigeria","Zimbabue"]
+],
+art:[
+["¿Quién escribió «Don Quijote de la Mancha»?","Miguel de Cervantes","Lope de Vega","Francisco de Quevedo","Calderón de la Barca"],
+["¿Quién pintó «Las Meninas»?","Diego Velázquez","Francisco de Goya","El Greco","Bartolomé Murillo"],
+["¿Quién pintó el «Guernica»?","Pablo Picasso","Salvador Dalí","Joan Miró","Joaquín Sorolla"],
+["¿En qué museo se expone el «Guernica»?","Museo Reina Sofía","Museo del Prado","Museo Thyssen","Guggenheim Bilbao"],
+["¿Quién pintó «La Gioconda»?","Leonardo da Vinci","Miguel Ángel","Rafael","Botticelli"],
+["¿Quién escribió «Cien años de soledad»?","Gabriel García Márquez","Mario Vargas Llosa","Julio Cortázar","Jorge Luis Borges"],
+["¿Quién escribió «Romeo y Julieta»?","William Shakespeare","Charles Dickens","Molière","Christopher Marlowe"],
+["¿Qué arquitecto diseñó el Museo Guggenheim de Bilbao?","Frank Gehry","Santiago Calatrava","Norman Foster","Zaha Hadid"],
+["¿Quién proyectó la Sagrada Familia de Barcelona?","Antoni Gaudí","Lluís Domènech i Montaner","Santiago Calatrava","Josep Puig i Cadafalch"],
+["¿Quién compuso «Las cuatro estaciones»?","Antonio Vivaldi","Johann Sebastian Bach","Wolfgang Amadeus Mozart","Ludwig van Beethoven"],
+["¿Quién escribió «La casa de Bernarda Alba»?","Federico García Lorca","Ramón del Valle-Inclán","Miguel de Unamuno","Antonio Machado"],
+["¿Quién pintó «La noche estrellada»?","Vincent van Gogh","Claude Monet","Paul Cézanne","Paul Gauguin"],
+["¿Quién esculpió el «David» de Florencia?","Miguel Ángel","Donatello","Bernini","Auguste Rodin"],
+["¿A quién se atribuye «La Odisea»?","Homero","Virgilio","Sófocles","Platón"],
+["¿Quién pintó «El jardín de las delicias»?","El Bosco","Pieter Brueghel","Alberto Durero","Rubens"],
+["¿Quién escribió «1984»?","George Orwell","Aldous Huxley","Ray Bradbury","H. G. Wells"],
+["¿Cuántas sinfonías completó Beethoven?","9","7","5","12"],
+["¿Qué escritor bilbaíno escribió «Niebla»?","Miguel de Unamuno","Pío Baroja","Azorín","Benito Pérez Galdós"],
+["¿Qué escritor creó a Sherlock Holmes?","Arthur Conan Doyle","Agatha Christie","Edgar Allan Poe","Charles Dickens"],
+["¿A qué movimiento artístico pertenece Salvador Dalí?","Surrealismo","Cubismo","Impresionismo","Barroco"],
+["¿Quién pintó «Los fusilamientos del 3 de mayo»?","Francisco de Goya","Diego Velázquez","Francisco de Zurbarán","Joaquín Sorolla"],
+["¿Quién escribió «El principito»?","Antoine de Saint-Exupéry","Julio Verne","Victor Hugo","Albert Camus"],
+["¿Quién escribió «Veinte mil leguas de viaje submarino»?","Julio Verne","H. G. Wells","Robert L. Stevenson","Alejandro Dumas"],
+["¿Quién es el autor de «La Regenta»?","Leopoldo Alas «Clarín»","Benito Pérez Galdós","Emilia Pardo Bazán","Juan Valera"],
+["¿Qué compositor siguió componiendo tras quedarse sordo?","Beethoven","Mozart","Chopin","Haydn"],
+["¿Quién escribió «Rayuela»?","Julio Cortázar","Jorge Luis Borges","Pablo Neruda","Mario Benedetti"],
+["¿Qué escultor vasco creó «El peine del viento»?","Eduardo Chillida","Jorge Oteiza","Agustín Ibarrola","Néstor Basterretxea"],
+["¿Quién pintó «El nacimiento de Venus»?","Botticelli","Tiziano","Rafael","Caravaggio"],
+["¿Quién escribió «Platero y yo»?","Juan Ramón Jiménez","Antonio Machado","Gustavo Adolfo Bécquer","Rafael Alberti"],
+["¿En qué ciudad está el Museo del Louvre?","París","Londres","Roma","Madrid"]
+],
+cie:[
+["¿Cuál es el símbolo químico del oro?","Au","Ag","Or","Go"],
+["¿Cuál es el planeta más grande del sistema solar?","Júpiter","Saturno","Neptuno","Urano"],
+["¿Cuántos huesos tiene el cuerpo de un adulto?","206","196","216","186"],
+["¿Qué gas absorben las plantas para hacer la fotosíntesis?","Dióxido de carbono","Oxígeno","Nitrógeno","Hidrógeno"],
+["¿Cuál es el animal terrestre más rápido?","Guepardo","León","Antílope","Caballo"],
+["¿Quién formuló la teoría de la relatividad?","Albert Einstein","Isaac Newton","Galileo Galilei","Niels Bohr"],
+["¿Cuál es el planeta más cercano al Sol?","Mercurio","Venus","Marte","Tierra"],
+["¿A qué temperatura hierve el agua a nivel del mar?","100 °C","90 °C","120 °C","80 °C"],
+["¿Qué órgano bombea la sangre por el cuerpo?","El corazón","El hígado","Los pulmones","Los riñones"],
+["¿Cuál es el animal más grande del mundo?","La ballena azul","El elefante africano","El cachalote","El tiburón ballena"],
+["¿Cuál es la fórmula química del agua?","H₂O","CO₂","O₂","H₂O₂"],
+["¿Cuántos planetas tiene el sistema solar?","8","9","7","10"],
+["¿Quién descubrió la penicilina?","Alexander Fleming","Louis Pasteur","Marie Curie","Robert Koch"],
+["¿Qué científica ganó el Nobel de Física y el de Química?","Marie Curie","Rosalind Franklin","Ada Lovelace","Lise Meitner"],
+["¿Cuál es el elemento más abundante del universo?","Hidrógeno","Helio","Oxígeno","Carbono"],
+["¿En qué parte de la célula se guarda la mayor parte del ADN?","El núcleo","El ribosoma","La membrana","La vacuola"],
+["¿Cuántas patas tiene una araña?","8","6","10","12"],
+["¿Qué planeta es conocido como el planeta rojo?","Marte","Venus","Júpiter","Mercurio"],
+["¿Cuál es la velocidad aproximada de la luz?","300.000 km/s","30.000 km/s","3.000 km/s","1.000.000 km/s"],
+["¿Qué científico español ganó el Nobel de Medicina en 1906?","Santiago Ramón y Cajal","Severo Ochoa","Gregorio Marañón","Isaac Peral"],
+["¿Cuál es el órgano más grande del cuerpo humano?","La piel","El hígado","El intestino","Los pulmones"],
+["¿Cuál de estos animales es un anfibio?","La rana","El lagarto","La tortuga","La salamanquesa"],
+["¿Qué metal es líquido a temperatura ambiente?","Mercurio","Plomo","Estaño","Aluminio"],
+["¿Cuántos cromosomas tiene una célula humana normal?","46","23","44","48"],
+["¿Qué tipo de animal es la ballena?","Mamífero","Pez","Anfibio","Reptil"],
+["¿En qué unidad se mide la resistencia eléctrica?","Ohmio","Voltio","Amperio","Vatio"],
+["¿Qué ave que no vuela vive en la Antártida?","El pingüino emperador","El avestruz","El kiwi","El frailecillo"],
+["¿Cuál es el hueso más largo del cuerpo humano?","El fémur","La tibia","El húmero","El peroné"],
+["¿Quién propuso la evolución por selección natural?","Charles Darwin","Jean-Baptiste Lamarck","Gregor Mendel","Isaac Newton"],
+["¿Qué planeta tiene los anillos más visibles?","Saturno","Júpiter","Urano","Neptuno"]
+],
+dep:[
+["¿Cuántos jugadores tiene un equipo de fútbol en el campo?","11","10","12","9"],
+["¿Cada cuántos años se celebran los Juegos Olímpicos de verano?","4","2","3","5"],
+["¿En qué deporte ha destacado Rafa Nadal?","Tenis","Pádel","Golf","Baloncesto"],
+["¿Qué selección ganó el Mundial de fútbol de 2010?","España","Países Bajos","Alemania","Brasil"],
+["¿Cuántos puntos vale un triple en baloncesto?","3","2","4","1"],
+["¿Cómo se llama el estadio del Athletic Club?","San Mamés","Anoeta","Mendizorrotza","El Sadar"],
+["¿Qué torneo de Grand Slam se juega en tierra batida en París?","Roland Garros","Wimbledon","US Open","Open de Australia"],
+["¿Cuántas casillas tiene un tablero de ajedrez?","64","81","49","100"],
+["¿Qué pieza de ajedrez solo se mueve en diagonal?","El alfil","La torre","El caballo","El rey"],
+["¿Cuánto mide una maratón?","42,195 km","40 km","21,097 km","45 km"],
+["¿Qué deporte es el Tour de Francia?","Ciclismo","Atletismo","Automovilismo","Triatlón"],
+["¿Cuántos jugadores tiene en pista un equipo de baloncesto?","5","6","7","4"],
+["¿Qué ciclista navarro ganó cinco Tours de Francia seguidos?","Miguel Induráin","Perico Delgado","Alberto Contador","Carlos Sastre"],
+["¿En qué ciudad fueron los Juegos Olímpicos de 1992?","Barcelona","Madrid","Sevilla","Atlanta"],
+["¿Qué deporte rural vasco consiste en cortar troncos con hacha?","Aizkolaritza","Harri-jasotzea","Sokatira","Txingas"],
+["¿Cuántos sets hay que ganar en un partido masculino de Grand Slam?","3","2","4","5"],
+["¿Qué piloto español fue campeón del mundo de Fórmula 1 en 2005 y 2006?","Fernando Alonso","Carlos Sainz","Pedro de la Rosa","Marc Gené"],
+["¿En qué deporte se juega con un disco llamado «puck»?","Hockey sobre hielo","Curling","Waterpolo","Lacrosse"],
+["¿Cuántas cartas tiene una baraja francesa sin comodines?","52","48","40","54"],
+["¿Cuántos jugadores tiene un equipo de rugby a XV en el campo?","15","13","11","12"],
+["¿Qué deportista tiene más medallas olímpicas de la historia?","Michael Phelps","Usain Bolt","Carl Lewis","Larisa Latýnina"],
+["¿Cuántos toques puede dar como máximo un equipo de voleibol antes de pasar el balón?","3","2","4","5"],
+["¿En qué deporte se hace un «home run»?","Béisbol","Críquet","Rugby","Fútbol americano"],
+["¿De qué color es el maillot del líder del Tour de Francia?","Amarillo","Rosa","Rojo","Verde"],
+["¿De qué color es la maglia del líder del Giro de Italia?","Rosa","Amarilla","Roja","Azul"],
+["¿En qué juego de mesa se compran calles y propiedades?","Monopoly","Risk","Cluedo","Scrabble"],
+["¿Cuántas caras tiene un dado normal?","6","8","4","12"],
+["¿Qué deporte ha practicado Pau Gasol?","Baloncesto","Balonmano","Fútbol","Waterpolo"],
+["¿En qué país nació el judo?","Japón","China","Corea del Sur","Tailandia"],
+["¿Cuánto dura un partido de fútbol reglamentario, sin descuento?","90 minutos","80 minutos","100 minutos","120 minutos"]
+]};
+
+/* ===== Ampliación: cultura general mundial ===== */
+const MORE={
+geo:[
+["¿Cuál es la capital de Turquía?","Ankara","Estambul","Esmirna","Antalya"],
+["¿Cuál es el río más caudaloso del mundo?","Amazonas","Nilo","Yangtsé","Misisipi"],
+["¿Cuál es el país más pequeño del mundo?","Ciudad del Vaticano","Mónaco","San Marino","Liechtenstein"],
+["¿Cuál es la capital de Nueva Zelanda?","Wellington","Auckland","Christchurch","Queenstown"],
+["¿En qué país está la antigua ciudad de Petra?","Jordania","Egipto","Israel","Siria"],
+["¿Qué país es el más poblado del mundo desde 2023?","India","China","Estados Unidos","Indonesia"],
+["¿Cuál es la capital de Kenia?","Nairobi","Mombasa","Adís Abeba","Kampala"],
+["¿Qué cordillera recorre el oeste de Sudamérica?","Los Andes","Las Rocosas","Los Apalaches","Sierra Madre"],
+["¿Qué mar separa Europa de África?","Mediterráneo","Mar Rojo","Mar Negro","Mar Caspio"],
+["¿Cuál es la capital de Argentina?","Buenos Aires","Córdoba","Rosario","Montevideo"],
+["¿En qué país está el Kilimanjaro?","Tanzania","Kenia","Uganda","Etiopía"],
+["¿Cuál es la capital de Corea del Sur?","Seúl","Busan","Pionyang","Incheon"],
+["¿Qué continente tiene más países?","África","Asia","Europa","América"],
+["¿Cuál es la capital de Noruega?","Oslo","Bergen","Estocolmo","Helsinki"],
+["¿En qué país está el templo de Angkor Wat?","Camboya","Tailandia","Vietnam","Laos"],
+["¿Cuál es la capital de la India?","Nueva Delhi","Bombay","Calcuta","Bangalore"],
+["¿Qué país es conocido como «el país del sol naciente»?","Japón","China","Corea del Sur","Tailandia"],
+["¿Qué océano baña la costa este de Estados Unidos?","Atlántico","Pacífico","Índico","Ártico"],
+["¿En qué ciudad india está el Taj Mahal?","Agra","Nueva Delhi","Jaipur","Bombay"],
+["¿Cuál es la capital de Marruecos?","Rabat","Casablanca","Marrakech","Fez"]
+],
+ent:[
+["¿Quién dirigió «Pulp Fiction»?","Quentin Tarantino","Martin Scorsese","Francis Ford Coppola","Joel Coen"],
+["¿Quién dirigió «Titanic»?","James Cameron","Steven Spielberg","Ron Howard","Robert Zemeckis"],
+["¿Qué grupo sueco ganó Eurovisión en 1974 con «Waterloo»?","ABBA","Roxette","Ace of Base","Europe"],
+["¿Qué actor interpretó a Vito Corleone en «El padrino» (1972)?","Marlon Brando","Al Pacino","Robert De Niro","James Caan"],
+["¿Quién es conocido como el «Rey del Rock and Roll»?","Elvis Presley","Chuck Berry","Little Richard","Jerry Lee Lewis"],
+["¿En qué ciudad transcurre la serie «Friends»?","Nueva York","Los Ángeles","Chicago","Boston"],
+["¿Qué personaje dice «¡Hasta el infinito y más allá!»?","Buzz Lightyear","Woody","Rayo McQueen","Nemo"],
+["¿Quién interpretó a Forrest Gump?","Tom Hanks","Robin Williams","Kevin Costner","Bill Murray"],
+["¿De qué país es el grupo BTS?","Corea del Sur","Japón","China","Tailandia"],
+["¿Qué princesa de Disney pierde un zapato de cristal?","Cenicienta","Blancanieves","Aurora","Bella"],
+["¿Qué película de 1999 trata de Neo y un mundo simulado?","Matrix","Origen","Blade Runner","Tron"],
+["¿Quién dirigió «Psicosis»?","Alfred Hitchcock","Stanley Kubrick","Orson Welles","Billy Wilder"],
+["¿Qué serie trata de un profesor de química que fabrica droga?","Breaking Bad","Los Soprano","The Wire","Ozark"],
+["¿Qué instrumento tocaba Jimi Hendrix?","Guitarra eléctrica","Batería","Bajo","Teclado"],
+["¿De qué país es el grupo U2?","Irlanda","Inglaterra","Escocia","Estados Unidos"],
+["¿Qué película de Pixar protagoniza un pez payaso?","Buscando a Nemo","El rey león","Ratatouille","La sirenita"],
+["¿Qué grupo británico cantaba «Wonderwall»?","Oasis","Blur","Radiohead","Coldplay"],
+["¿Quién dirigió la trilogía de «El Señor de los Anillos»?","Peter Jackson","Steven Spielberg","Christopher Nolan","Ridley Scott"],
+["¿En qué videojuego se construye todo con bloques cúbicos?","Minecraft","Fortnite","Tetris","The Sims"],
+["¿En qué país nació el tango?","Argentina","México","Cuba","Brasil"]
+],
+his:[
+["¿En qué año se hundió el Titanic?","1912","1905","1918","1923"],
+["¿Quién fue el primer ser humano en viajar al espacio?","Yuri Gagarin","Neil Armstrong","Valentina Tereshkova","Alan Shepard"],
+["¿Quién se coronó emperador de Francia en 1804?","Napoleón Bonaparte","Luis XIV","Luis XVI","Carlos X"],
+["¿Qué rey de Francia fue guillotinado en 1793?","Luis XVI","Luis XIV","Luis XV","Carlos X"],
+["¿Qué país lanzó la bomba atómica sobre Hiroshima?","Estados Unidos","Unión Soviética","Reino Unido","Alemania"],
+["¿Qué líder de la India impulsó la resistencia no violenta?","Mahatma Gandhi","Jawaharlal Nehru","Indira Gandhi","B. R. Ambedkar"],
+["¿Quién gobernaba Alemania durante la Segunda Guerra Mundial?","Adolf Hitler","Heinrich Himmler","Hermann Göring","Otto von Bismarck"],
+["¿Qué civilización construyó el Partenón?","Los griegos","Los romanos","Los egipcios","Los persas"],
+["¿En qué país comenzó la Revolución Industrial?","Reino Unido","Francia","Alemania","Estados Unidos"],
+["¿Quién conquistó el Imperio azteca?","Hernán Cortés","Francisco Pizarro","Diego de Almagro","Pedro de Valdivia"],
+["¿Quién conquistó el Imperio inca?","Francisco Pizarro","Hernán Cortés","Diego de Almagro","Vasco Núñez de Balboa"],
+["¿Qué presidente de EE. UU. firmó la Proclamación de Emancipación de los esclavos?","Abraham Lincoln","George Washington","Thomas Jefferson","Ulysses S. Grant"],
+["¿En qué año se disolvió la Unión Soviética?","1991","1989","1985","1993"],
+["¿Qué monarca británica reinó durante más tiempo?","Isabel II","Victoria","Isabel I","Ana"],
+["¿Qué general cartaginés cruzó los Alpes con elefantes?","Aníbal","Alejandro Magno","Atila","Escipión"],
+["¿De qué reino era rey Alejandro Magno?","Macedonia","Esparta","Atenas","Persia"],
+["¿En qué año fue el desembarco de Normandía?","1944","1942","1945","1943"],
+["¿Qué barco llevó a los peregrinos ingleses a América en 1620?","Mayflower","Santa María","Endeavour","Beagle"],
+["¿Qué científico fue juzgado por la Inquisición por defender que la Tierra gira alrededor del Sol?","Galileo Galilei","Nicolás Copérnico","Leonardo da Vinci","Johannes Kepler"],
+["¿Qué nave de Colón encalló y no volvió del primer viaje?","La Santa María","La Pinta","La Niña","La Victoria"]
+],
+art:[
+["¿Quién escribió «Guerra y paz»?","León Tolstói","Fiódor Dostoievski","Antón Chéjov","Aleksandr Pushkin"],
+["¿Quién escribió «Crimen y castigo»?","Fiódor Dostoievski","León Tolstói","Nikolái Gógol","Iván Turguénev"],
+["¿Quién pintó «El grito»?","Edvard Munch","Gustav Klimt","Egon Schiele","Vasili Kandinsky"],
+["¿Quién pintó el cuadro dorado «El beso» (1908)?","Gustav Klimt","Edvard Munch","Egon Schiele","Amedeo Modigliani"],
+["¿Quién escribió «La divina comedia»?","Dante Alighieri","Petrarca","Giovanni Boccaccio","Nicolás Maquiavelo"],
+["¿Quién compuso la ópera «La flauta mágica»?","Wolfgang Amadeus Mozart","Giuseppe Verdi","Richard Wagner","Joseph Haydn"],
+["¿Quién escribió «Orgullo y prejuicio»?","Jane Austen","Charlotte Brontë","Emily Brontë","Virginia Woolf"],
+["¿Quién pintó la bóveda de la Capilla Sixtina?","Miguel Ángel","Rafael","Leonardo da Vinci","Botticelli"],
+["¿Quién escribió «Moby Dick»?","Herman Melville","Mark Twain","Ernest Hemingway","Jack London"],
+["¿Quién escribió «El viejo y el mar»?","Ernest Hemingway","John Steinbeck","William Faulkner","F. Scott Fitzgerald"],
+["¿Quién pintó «La joven de la perla»?","Johannes Vermeer","Rembrandt","Vincent van Gogh","Frans Hals"],
+["¿Qué pintor es famoso por su serie de «Nenúfares»?","Claude Monet","Pierre-Auguste Renoir","Edgar Degas","Édouard Manet"],
+["¿Quién compuso la ópera «La traviata»?","Giuseppe Verdi","Giacomo Puccini","Gioachino Rossini","Mozart"],
+["¿Quién escribió «Los miserables»?","Victor Hugo","Honoré de Balzac","Gustave Flaubert","Émile Zola"],
+["¿Quién escribió «La metamorfosis»?","Franz Kafka","Thomas Mann","Hermann Hesse","Goethe"],
+["¿En qué ciudad está el Museo del Prado?","Madrid","Barcelona","Sevilla","Toledo"],
+["¿Qué poeta chileno escribió «Veinte poemas de amor y una canción desesperada»?","Pablo Neruda","Gabriela Mistral","Vicente Huidobro","Nicanor Parra"],
+["¿Quién compuso el «Bolero»?","Maurice Ravel","Claude Debussy","Manuel de Falla","Erik Satie"],
+["¿Qué artista pop pintó las latas de sopa Campbell?","Andy Warhol","Roy Lichtenstein","Keith Haring","Jean-Michel Basquiat"],
+["¿Quién escribió «Fausto»?","Johann Wolfgang von Goethe","Friedrich Schiller","Heinrich Heine","Franz Kafka"]
+],
+cie:[
+["¿Cuál es el símbolo químico del hierro?","Fe","Hi","Ir","F"],
+["¿Cuál es la estrella más cercana a la Tierra?","El Sol","Próxima Centauri","Sirio","Betelgeuse"],
+["¿Quién enunció la ley de la gravitación universal?","Isaac Newton","Albert Einstein","Galileo Galilei","Johannes Kepler"],
+["¿Cuántos corazones tiene un pulpo?","3","1","2","4"],
+["¿Qué vitamina fabrica la piel al recibir la luz del sol?","Vitamina D","Vitamina A","Vitamina C","Vitamina B12"],
+["¿Cuál es el gas más abundante en la atmósfera terrestre?","Nitrógeno","Oxígeno","Dióxido de carbono","Argón"],
+["¿Qué grupo sanguíneo es el donante universal de glóbulos rojos?","0 negativo","AB positivo","A positivo","B negativo"],
+["¿Quién patentó el teléfono en 1876?","Alexander Graham Bell","Thomas Edison","Guglielmo Marconi","Samuel Morse"],
+["¿Cuál es el planeta más caliente del sistema solar?","Venus","Mercurio","Marte","Júpiter"],
+["¿Qué parte de la planta hace principalmente la fotosíntesis?","Las hojas","Las raíces","Las flores","El tallo"],
+["¿Cuál es el único mamífero capaz de volar de verdad?","El murciélago","La ardilla voladora","El lémur volador","El colibrí"],
+["¿Cuántos dientes tiene un adulto con la dentadura completa?","32","28","30","36"],
+["¿Quién es considerado el padre de la genética por sus experimentos con guisantes?","Gregor Mendel","Charles Darwin","Louis Pasteur","James Watson"],
+["¿Qué pH tiene el agua pura?","7","0","14","5"],
+["¿Cómo se llama nuestra galaxia?","La Vía Láctea","Andrómeda","El Triángulo","El Sombrero"],
+["¿Qué órganos filtran la sangre y producen la orina?","Los riñones","El hígado","El bazo","El páncreas"],
+["¿Qué capa de la atmósfera nos protege de los rayos ultravioleta?","La capa de ozono","La troposfera","La ionosfera","La exosfera"],
+["¿Cuál es el ave más grande del mundo?","El avestruz","El cóndor andino","El emú","El albatros"],
+["¿Cuánto tarda la luz del Sol en llegar a la Tierra, aproximadamente?","8 minutos","1 segundo","1 hora","1 día"],
+["¿Qué científico desarrolló la vacuna contra la rabia?","Louis Pasteur","Edward Jenner","Alexander Fleming","Robert Koch"]
+],
+dep:[
+["¿En qué país fueron los primeros Juegos Olímpicos modernos, en 1896?","Grecia","Francia","Reino Unido","Estados Unidos"],
+["¿Qué atleta jamaicano tiene el récord mundial de los 100 m?","Usain Bolt","Yohan Blake","Asafa Powell","Carl Lewis"],
+["¿Cuántos aros tiene la bandera olímpica?","5","4","6","7"],
+["¿En qué deporte se juega la Super Bowl?","Fútbol americano","Béisbol","Baloncesto","Hockey sobre hielo"],
+["¿Qué torneo de Grand Slam se juega sobre hierba en Londres?","Wimbledon","Roland Garros","US Open","Open de Australia"],
+["¿De qué país es el futbolista Lionel Messi?","Argentina","Uruguay","España","Brasil"],
+["¿Qué deporte practica Tiger Woods?","Golf","Tenis","Béisbol","Atletismo"],
+["¿Cuántos jugadores tiene en pista un equipo de voleibol?","6","5","7","4"],
+["¿Cuánto dura cada cuarto de un partido de la NBA?","12 minutos","10 minutos","15 minutos","20 minutos"],
+["¿Qué piloto alemán ganó 7 Mundiales de Fórmula 1?","Michael Schumacher","Sebastian Vettel","Nico Rosberg","Niki Lauda"],
+["¿Qué Gran Premio de F1 se corre por las calles de Montecarlo?","Mónaco","Bakú","Singapur","Las Vegas"],
+["¿En qué juego de mesa se forman palabras con fichas de letras?","Scrabble","Monopoly","Parchís","Risk"],
+["¿Cuántas fichas tiene un dominó clásico?","28","24","32","36"],
+["¿En qué deporte se disputa la Ryder Cup?","Golf","Tenis","Vela","Polo"],
+["¿En qué país se inventó el baloncesto?","Estados Unidos","Canadá","Reino Unido","Francia"],
+["¿Cuántos hoyos tiene un recorrido completo de golf?","18","9","12","21"],
+["¿En qué deporte destaca Simone Biles?","Gimnasia artística","Atletismo","Natación","Tenis"],
+["¿Cuál es la competición europea de clubes de fútbol más importante?","Liga de Campeones","Europa League","Conference League","Supercopa de Europa"],
+["¿Qué tenista suizo ha ganado 8 veces Wimbledon?","Roger Federer","Stan Wawrinka","Novak Djokovic","Björn Borg"],
+["¿En qué deporte se usan un tee, un putter y un green?","Golf","Críquet","Polo","Hockey"]
+]};
+for(const k in MORE)Q[k].push(...MORE[k]);
+
+/* ================== UTILIDADES ================== */
+const $=id=>document.getElementById(id);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const store={get(k,d){try{const v=localStorage.getItem('sabelotodo_'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem('sabelotodo_'+k,JSON.stringify(v));}catch(e){}}};
+const PCOL=['#ffd54a','#5ee0ff','#ff7ab6','#9cff6b'];
+
+/* ================== SONIDO ================== */
+let ac=null,muted=store.get('muted',false);
+function audio(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ac&&ac.state!=='running')ac.resume().catch(()=>{});}
+function tone(f,d,type='sine',v=.08,delay=0,f2){if(!ac||muted)return;const t=ac.currentTime+delay,o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+d+.02);}
+const SFX={tick:()=>tone(1200,.03,'square',.03),ok:()=>[660,880,1320].forEach((f,i)=>tone(f,.18,'triangle',.1,i*.09)),
+  bad:()=>{tone(300,.35,'sawtooth',.07,0,140);},wedge:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,.16,'square',.05,i*.08)),
+  win:()=>[523,523,523,659,784,659,784,1047].forEach((f,i)=>tone(f,.22,'square',.06,i*.14)),click:()=>tone(700,.05,'triangle',.06)};
+for(const ev of ['touchend','click','keydown'])document.addEventListener(ev,audio,{passive:true});
+function setMute(m){muted=m;store.set('muted',m);$('mute').textContent=m?'✕':'♪';}
+$('mute').onclick=()=>{setMute(!muted);SFX.click();};setMute(muted);
+
+/* ================== DIBUJO ================== */
+function arcPath(r,a0,a1,cx=0,cy=0){const rad=d=>(d-90)*Math.PI/180;const x0=cx+r*Math.cos(rad(a0)),y0=cy+r*Math.sin(rad(a0)),x1=cx+r*Math.cos(rad(a1)),y1=cy+r*Math.sin(rad(a1));
+  return `M${cx},${cy} L${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`;}
+function pieSVG(owned,ring){let s=`<circle r="11.5" fill="${ring||'#0d1636'}"/>`;
+  CATS.forEach((c,i)=>{s+=`<path d="${arcPath(10,i*60,(i+1)*60)}" fill="${owned.has(c.id)?c.color:'#2a3560'}" stroke="#0d1636" stroke-width=".7"/>`;});
+  return s+`<circle r="10.4" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".5"/>`;}
+$('logoPie').innerHTML=pieSVG(new Set(CATS.map(c=>c.id)));
+function buildWheel(){let s='<circle r="108" fill="#fffaf0"/><circle r="104" fill="#0d1636"/>';
+  CATS.forEach((c,i)=>{const a0=i*60,a1=a0+60,mid=a0+30;s+=`<path d="${arcPath(100,a0,a1)}" fill="${c.color}" stroke="#fffaf0" stroke-width="2.5"/>`;
+    const rad=(mid-90)*Math.PI/180,x=Math.cos(rad)*64,y=Math.sin(rad)*64;
+    s+=`<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${mid})"><text text-anchor="middle" y="18" font-size="18">${c.icon}</text><text text-anchor="middle" y="-14" font-size="7.6" font-weight="800" fill="#fff" font-family="Nunito,sans-serif" style="text-transform:uppercase;letter-spacing:.3px">${c.short}</text></g>`;});
+  for(let i=0;i<24;i++){const a=(i*15-90)*Math.PI/180;s+=`<circle cx="${(Math.cos(a)*106).toFixed(1)}" cy="${(Math.sin(a)*106).toFixed(1)}" r="1.6" fill="${i%2?'#ffd54a':'#fff'}"/>`;}
+  $('wheel').innerHTML=s;}
+buildWheel();
+$('catList').innerHTML=CATS.map(c=>`<span><i style="background:${c.color}"></i>${c.icon} ${c.name}</span>`).join('');
+
+/* ================== CONFIGURACIÓN ================== */
+let nPlayers=store.get('n',2),timerOn=store.get('timer',true),names=store.get('names',['Jugador 1','Jugador 2','Jugador 3','Jugador 4']);
+function renderSetup(){
+  [...$('nPl').children].forEach(b=>b.classList.toggle('on',+b.dataset.n===nPlayers));
+  $('names').innerHTML=Array.from({length:nPlayers},(_,i)=>`<div><span class="dot" style="background:${PCOL[i]}"></span><input maxlength="14" data-i="${i}" value="${(names[i]||'Jugador '+(i+1)).replace(/"/g,'&quot;')}"></div>`).join('');
+  $('tmr').classList.toggle('on',timerOn);
+}
+$('nPl').onclick=e=>{const b=e.target.closest('button');if(!b)return;saveNames();nPlayers=+b.dataset.n;store.set('n',nPlayers);renderSetup();SFX.click();};
+$('tmr').onclick=()=>{timerOn=!timerOn;store.set('timer',timerOn);renderSetup();SFX.click();};
+function saveNames(){document.querySelectorAll('#names input').forEach(inp=>{names[+inp.dataset.i]=inp.value.trim()||('Jugador '+(+inp.dataset.i+1));});store.set('names',names);}
+renderSetup();
+
+/* ================== PARTIDA ================== */
+let G=null,rot=0,spinning=false;
+const decks={};
+function draw(cat){if(!decks[cat]||!decks[cat].length)decks[cat]=shuffle(Q[cat].map((_,i)=>i));return Q[cat][decks[cat].pop()];}
+function show(id){for(const s of ['setup','game','winScreen'])$(s).classList.toggle('hidden',s!==id);window.scrollTo(0,0);}
+$('start').onclick=()=>{audio();saveNames();
+  G={players:Array.from({length:nPlayers},(_,i)=>({name:names[i],color:PCOL[i],wedges:new Set(),ok:0,bad:0})),cur:0,asked:0};
+  show('game');renderGame();SFX.wedge();};
+$('quit').onclick=()=>{if(spinning)return;G=null;show('setup');renderSetup();};
+$('again').onclick=()=>{show('setup');renderSetup();};
+
+function renderGame(){
+  const p=G.players[G.cur];
+  $('players').style.gridTemplateColumns=G.players.length>2?'1fr 1fr':'1fr';
+  $('players').innerHTML=G.players.map((q,i)=>`<div class="pl ${i===G.cur?'cur':''}"><svg viewBox="-12 -12 24 24">${pieSVG(q.wedges,q.color)}</svg><div style="min-width:0;flex:1"><div class="nm" style="color:${q.color}">${esc(q.name)}</div><div class="st">${q.wedges.size}/6 quesitos · ${q.ok} aciertos</div></div></div>`).join('');
+  $('turn').innerHTML=G.players.length>1?`Turno de <span style="color:${p.color}">${esc(p.name)}</span>`:'¡Tu turno!';
+  $('turnSub').textContent=p.wedges.size===6?'¡Tienes los 6 quesitos! Gira para la pregunta final':'Gira la ruleta';
+  $('spin').disabled=false;
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+$('spin').onclick=()=>{
+  if(spinning||!G)return;audio();spinning=true;$('spin').disabled=true;
+  const i=Math.floor(Math.random()*6);
+  const target=-(i*60+30)+(Math.random()*36-18);
+  let delta=((target-rot)%360+360)%360;rot+=360*5+delta;
+  $('wheel').style.transform=`rotate(${rot}deg)`;
+  // tic-tac que se va frenando
+  let t=0,gap=40;const tick=()=>{if(t>3100)return;SFX.tick();t+=gap;gap*=1.09;setTimeout(tick,gap);};tick();
+  setTimeout(()=>{spinning=false;ask(CATS[i]);},3500);
+};
+
+/* ================== PREGUNTA ================== */
+let qState=null,tInt=null;
+function ask(cat){
+  const p=G.players[G.cur];const [text,right,...wrong]=draw(cat.id);
+  const final=p.wedges.size===6,forWedge=!final&&!p.wedges.has(cat.id);
+  const opts=shuffle([right,...wrong]);
+  qState={cat,right,final,forWedge,done:false};G.asked++;
+  $('qHead').style.background=cat.color;
+  $('qCat').innerHTML=`<span>${cat.icon}</span>${cat.name}`;
+  $('qTag').textContent=final?'★ PREGUNTA FINAL':forWedge?'Pregunta de quesito':'Ya tienes este quesito';
+  $('qWho').textContent=G.players.length>1?`Pregunta para ${p.name}`:`Pregunta ${G.asked}`;
+  $('qText').textContent=text;
+  $('opts').innerHTML=opts.map((o,k)=>`<button class="opt" data-v="${esc(o)}"><b>${'ABCD'[k]}</b><span>${esc(o)}</span></button>`).join('');
+  $('res').innerHTML='';$('next').classList.add('hidden');
+  $('qModal').classList.remove('hidden');
+  $('timer').classList.toggle('hidden',!timerOn);
+  clearInterval(tInt);
+  if(timerOn){const T=25000,t0=Date.now();const bar=$('timerBar');bar.style.width='100%';bar.style.background='#1d2340';
+    tInt=setInterval(()=>{const left=1-(Date.now()-t0)/T;bar.style.width=Math.max(0,left*100)+'%';if(left<.3)bar.style.background='#e2443b';
+      if(left<=0){clearInterval(tInt);answer(null);}},100);}
+}
+$('opts').onclick=e=>{const b=e.target.closest('.opt');if(!b||qState.done)return;answer(b.dataset.v,b);};
+function answer(val,btn){
+  if(qState.done)return;qState.done=true;clearInterval(tInt);
+  const p=G.players[G.cur],ok=val===qState.right;
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.v===qState.right)b.classList.add('ok');});
+  if(btn&&!ok)btn.classList.add('bad');
+  const icon=ok?'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#2fb35a"/><path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                :'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#e2443b"/><path d="M8 8l8 8M16 8l-8 8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  let msg;
+  if(ok){p.ok++;
+    if(qState.final){msg='¡Correcto! ¡Has ganado la partida!';}
+    else if(qState.forWedge){p.wedges.add(qState.cat.id);msg=`¡Correcto! Ganas el quesito de ${qState.cat.name}.`+(p.wedges.size===6?' ¡Ya tienes los 6!':' Vuelves a tirar.');}
+    else msg='¡Correcto! Vuelves a tirar.';
+    SFX.ok();if(qState.forWedge)setTimeout(SFX.wedge,350);
+  }else{p.bad++;
+    msg=(val===null?'¡Se acabó el tiempo! ':'¡Oh, no! ')+`La respuesta era «${qState.right}».`+(G.players.length>1?' Pasa el turno.':'');SFX.bad();}
+  $('res').className='res '+(ok?'ok':'bad');$('res').innerHTML=icon+`<span>${esc(msg)}</span>`;
+  qState.ok=ok;$('next').textContent=ok&&qState.final?'Ver resultado':'Continuar';$('next').classList.remove('hidden');
+}
+$('next').onclick=()=>{
+  $('qModal').classList.add('hidden');SFX.click();
+  const p=G.players[G.cur];
+  if(qState.ok&&qState.final){win(p);return;}
+  if(qState.ok&&qState.forWedge)toast(qState.cat);
+  if(!qState.ok)G.cur=(G.cur+1)%G.players.length;
+  renderGame();
+};
+function toast(cat){const d=document.createElement('div');d.className='toast';d.innerHTML=`<svg viewBox="-12 -12 24 24" width="34" height="34"><circle r="11" fill="#0d1636"/><path d="${arcPath(10,CATS.indexOf(cat)*60,CATS.indexOf(cat)*60+60)}" fill="${cat.color}"/></svg>¡Quesito conseguido!`;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1600);}
+
+/* ================== VICTORIA ================== */
+function win(p){
+  SFX.win();confetti();
+  const solo=G.players.length===1;
+  $('winTitle').textContent=solo?'¡Lo has conseguido!':`¡${p.name} gana!`;
+  $('winSub').textContent=solo?'Has reunido los 6 quesitos y acertado la pregunta final.':'Ha reunido los 6 quesitos y acertado la pregunta final.';
+  $('winPie').innerHTML=pieSVG(p.wedges,p.color);
+  const total=p.ok+p.bad;
+  $('winStats').innerHTML=`<div><b>${total}</b><span>preguntas</span></div><div><b>${p.ok}</b><span>aciertos</span></div><div><b>${total?Math.round(p.ok/total*100):0}%</b><span>acierto</span></div>`;
+  if(solo){const best=store.get('best',null);let rec;
+    if(best===null||total<best){store.set('best',total);rec=best===null?'¡Primer récord guardado!':`¡Nuevo récord! Antes: ${best} preguntas.`;}
+    else rec=`Tu récord: ${best} preguntas.`;
+    $('winRecord').textContent=rec;}
+  else $('winRecord').textContent=G.players.filter(q=>q!==p).map(q=>`${q.name}: ${q.wedges.size}/6`).join(' · ');
+  G=null;show('winScreen');
+}
+function confetti(){const cols=CATS.map(c=>c.color).concat(['#ffd54a','#fff']);
+  for(let i=0;i<90;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=cols[i%cols.length];
+    d.style.animationDuration=(2.2+Math.random()*2)+'s';d.style.animationDelay=(Math.random()*.8)+'s';d.style.borderRadius=Math.random()<.4?'50%':'2px';
+    document.body.appendChild(d);setTimeout(()=>d.remove(),5200);}}
+
+/* icono para Dock / pantalla de inicio */
+try{const c=document.createElement('canvas');c.width=c.height=180;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,180);gr.addColorStop(0,'#24357a');gr.addColorStop(1,'#0d1636');
+  g.fillStyle=gr;g.fillRect(0,0,180,180);CATS.forEach((ct,i)=>{g.beginPath();g.moveTo(90,90);g.arc(90,90,62,(i*60-90)*Math.PI/180,((i+1)*60-90)*Math.PI/180);g.closePath();g.fillStyle=ct.color;g.fill();g.lineWidth=4;g.strokeStyle='#0d1636';g.stroke();});
+  const url=c.toDataURL('image/png');for(const rel of ['apple-touch-icon','icon']){const l=document.createElement('link');l.rel=rel;l.href=url;document.head.appendChild(l);}}catch(e){}
+})();
+</script>
+</body>
+</html>
